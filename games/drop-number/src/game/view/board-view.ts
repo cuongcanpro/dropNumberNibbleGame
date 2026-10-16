@@ -17,8 +17,6 @@ const TAP_TOP = 170;
 const NEXT_X = DESIGN_WIDTH - 70;
 const NEXT_Y = 168;
 const SWEEP_H = 240;
-const SWEEP_PASS_MS = 650;
-const SWEEP_REST_MS = 220;
 
 const PALETTE = [
 	0xf06292, 0x4fc3f7, 0x81c784, 0xffb74d, 0xba68c8, 0xe57373, 0x4db6ac, 0xffd54f, 0x7986cb,
@@ -89,15 +87,16 @@ function sweepTexture(scene: Phaser.Scene): string {
 	return key;
 }
 
-function dotTexture(scene: Phaser.Scene): string {
-	const key = 'spark';
+/** A square spark: a solid core inside a faint halo, so additive blending glows around it. */
+function squareSparkTexture(scene: Phaser.Scene): string {
+	const key = 'spark-square';
 	if (scene.textures.exists(key)) return key;
 	const g = scene.add.graphics();
-	g.fillStyle(0xffffff, 0.35);
-	g.fillCircle(10, 10, 10);
+	g.fillStyle(0xffffff, 0.3);
+	g.fillRect(0, 0, 18, 18);
 	g.fillStyle(0xffffff, 1);
-	g.fillCircle(10, 10, 6);
-	g.generateTexture(key, 20, 20);
+	g.fillRect(4, 4, 10, 10);
+	g.generateTexture(key, 18, 18);
 	g.destroy();
 	return key;
 }
@@ -152,8 +151,8 @@ function setBlockPos(block: BlockSprite, x: number, y: number): void {
 }
 
 /**
- * The 5x7 board, the falling block, the next one, and the effects: a light sweeping down the falling
- * block's column, sparks while it slams, and particles that join two merging blocks. A fixed pool of block
+ * The 5x7 board, the falling block, the next one, and the effects: a soft light down the column a block
+ * is dropped into, square sparks while it slams, and particles that join two merging blocks. A fixed pool of block
  * sprites (one per cell, plus the row above the board) is updated in place.
  */
 export class BoardView {
@@ -166,8 +165,6 @@ export class BoardView {
 	private readonly sweep: Phaser.GameObjects.Image;
 	private readonly sparks: Phaser.GameObjects.Particles.ParticleEmitter;
 	private readonly trail: Phaser.GameObjects.Particles.ParticleEmitter;
-	private sweepMs = 0;
-	private activeCol: number | null = null;
 
 	constructor(scene: Phaser.Scene, onColumn: (col: number) => void) {
 		this.scene = scene;
@@ -201,12 +198,8 @@ export class BoardView {
 				.on('pointerdown', () => onColumn(col));
 		}
 
-		// Light on the falling block's column: a soft glow plus a band sweeping down, again and again.
-		this.glow = scene.add
-			.image(0, laneY, laneKey)
-			.setBlendMode('ADD')
-			.setAlpha(0.18)
-			.setVisible(false);
+		// Light shown once down a column when the player drops a block into it (`flashColumn`), under the blocks.
+		this.glow = scene.add.image(0, laneY, laneKey).setBlendMode('ADD').setVisible(false);
 		this.sweep = scene.add
 			.image(0, LANE_TOP + SWEEP_H / 2, sweepTexture(scene))
 			.setBlendMode('ADD')
@@ -229,12 +222,13 @@ export class BoardView {
 		this.next.image.setScale(0.55);
 		this.next.text.setScale(0.55);
 
-		const spark = dotTexture(scene);
+		const spark = squareSparkTexture(scene);
 		this.trail = scene.add.particles(0, 0, spark, {
 			speed: { min: 10, max: 60 },
 			angle: { min: 0, max: 360 },
+			rotate: { min: 0, max: 360 },
 			lifespan: { min: 250, max: 420 },
-			scale: { start: 0.9, end: 0 },
+			scale: { start: 0.8, end: 0 },
 			alpha: { start: 0.9, end: 0 },
 			blendMode: 'ADD',
 			emitting: false,
@@ -242,8 +236,9 @@ export class BoardView {
 		this.sparks = scene.add.particles(0, 0, spark, {
 			speed: { min: 90, max: 340 },
 			angle: { min: 0, max: 360 },
+			rotate: { start: 0, end: 360 },
 			lifespan: { min: 320, max: 620 },
-			scale: { start: 2.2, end: 0 },
+			scale: { start: 1.5, end: 0 },
 			alpha: { start: 1, end: 0 },
 			blendMode: 'ADD',
 			emitting: false,
@@ -282,7 +277,6 @@ export class BoardView {
 		const x = cellX(col);
 		const py = cellY(y);
 		setBlockPos(this.faller, x, py);
-		this.setActiveColumn(col);
 		if (slam) {
 			this.trail.setParticleTint(colorOf(this.fallerValue));
 			this.trail.emitParticleAt(x + (Math.random() - 0.5) * CELL * 0.8, py - CELL / 2, 2);
@@ -291,7 +285,31 @@ export class BoardView {
 
 	hideFaller(): void {
 		showBlock(this.scene, this.faller, undefined);
-		this.setActiveColumn(null);
+	}
+
+	/** The player dropped the block into `col`: a soft light in the block's colour runs down it once. */
+	flashColumn(col: number): void {
+		const color = shade(colorOf(this.fallerValue), 1.2);
+		const x = cellX(col);
+		this.scene.tweens.killTweensOf([this.glow, this.sweep]);
+		this.glow
+			.setPosition(x, LANE_TOP + LANE_H / 2)
+			.setTint(color)
+			.setAlpha(0.12)
+			.setVisible(true);
+		this.scene.tweens.add({ targets: this.glow, alpha: 0, duration: 450, ease: 'Quad.Out' });
+		this.sweep
+			.setPosition(x, LANE_TOP + SWEEP_H / 2)
+			.setTint(color)
+			.setAlpha(0.45)
+			.setVisible(true);
+		this.scene.tweens.add({
+			targets: this.sweep,
+			y: BOTTOM - SWEEP_H / 2,
+			alpha: 0,
+			duration: 380,
+			ease: 'Quad.In',
+		});
 	}
 
 	/** The absorbed blocks slide into the merged one trailing particles, then burst and pop. */
@@ -349,30 +367,6 @@ export class BoardView {
 	refuse(col: number): void {
 		const targets = (this.cells[col] ?? []).flatMap((b) => [b.image, b.text]);
 		this.scene.tweens.add({ targets, x: '+=10', duration: 50, yoyo: true, repeat: 2 });
-	}
-
-	private setActiveColumn(col: number | null): void {
-		if (col === this.activeCol) return;
-		this.activeCol = col;
-		const on = col !== null;
-		this.glow.setVisible(on);
-		this.sweep.setVisible(on);
-		if (!on) return;
-		this.glow.setX(cellX(col));
-		this.sweep.setX(cellX(col));
-		// Restart the sweep from the top so the light follows the block into its new column.
-		this.sweepMs = 0;
-		this.tick(0);
-	}
-
-	/** Steps the light sweeping down the active column: a fast pass, then a short rest, again and again. */
-	tick(deltaMs: number): void {
-		if (this.activeCol === null) return;
-		this.sweepMs = (this.sweepMs + deltaMs) % (SWEEP_PASS_MS + SWEEP_REST_MS);
-		const t = Math.min(1, this.sweepMs / SWEEP_PASS_MS);
-		const top = LANE_TOP + SWEEP_H / 2;
-		this.sweep.setY(top + (BOTTOM - SWEEP_H / 2 - top) * t * t);
-		this.sweep.setAlpha(this.sweepMs < SWEEP_PASS_MS ? 1 : 0);
 	}
 
 	/** Sparks fly out of the merge and a ring of light grows and fades. */

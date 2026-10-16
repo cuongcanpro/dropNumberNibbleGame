@@ -185,7 +185,6 @@ export class GameScene extends Scene {
 		);
 		this.faller = step.faller;
 		this.view.placeFaller(step.faller.col, step.faller.y, step.faller.slam);
-		this.view.tick(Math.min(deltaMs, 50));
 		if (step.landed) this.land(step.faller.col);
 	}
 
@@ -200,6 +199,7 @@ export class GameScene extends Scene {
 		}
 		this.faller = moved;
 		this.view.placeFaller(moved.col, moved.y, true);
+		this.view.flashColumn(moved.col);
 	}
 
 	private land(col: number): void {
