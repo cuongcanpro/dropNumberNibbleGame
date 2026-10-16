@@ -1,4 +1,3 @@
-import { preloadShakeAssets } from '@repo/game-kit/alt-ad';
 import { applyHostCamera } from '@repo/game-kit/platform';
 import { attachLoadingScreen, preloadGameKitUi } from '@repo/game-kit/ui';
 import { Scene } from 'phaser';
@@ -23,9 +22,8 @@ export class BootScene extends Scene {
 	create(): void {
 		const loading = attachLoadingScreen(this);
 		this.load.once('complete', () => loading.finish(() => this.scene.start(SCENE_GAME)));
-		// setting/result/tutorial + hud (Home/Settings) của game-kit; shake = popup alt-ad (lắc thay quảng cáo).
+		// setting/result/tutorial + hud (Home/Settings) của game-kit. Game không có thưởng nên không tải popup lắc (alt-ad).
 		preloadGameKitUi(this, ['setting', 'result', 'tutorial', 'hud']);
-		preloadShakeAssets(this);
 		// Ảnh riêng của game = atlas (art/ -> pnpm pack-assets), không phải N lần `load.image` (~80 ms/file trên máy thật).
 		// Ảnh full-màn hình / font còn lẻ: `this.load.image('key', 'res/...')`. Âm thanh: `queueGameAudio` ở scene chơi.
 		preloadGameArt(this);

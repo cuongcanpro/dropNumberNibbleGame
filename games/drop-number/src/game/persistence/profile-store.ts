@@ -3,9 +3,11 @@ import { PROFILE_STORAGE_KEY } from '../config/game-config';
 export interface Profile {
 	readonly bestScore: number;
 	readonly gamesPlayed: number;
+	/** Highest block ever made. */
+	readonly bestTile: number;
 }
 
-export const DEFAULT_PROFILE: Profile = { bestScore: 0, gamesPlayed: 0 };
+export const DEFAULT_PROFILE: Profile = { bestScore: 0, gamesPlayed: 0, bestTile: 0 };
 
 function nonNegativeInt(value: unknown, fallback: number): number {
 	return typeof value === 'number' && Number.isFinite(value) && value >= 0
@@ -26,6 +28,7 @@ export class ProfileStore {
 			return {
 				bestScore: nonNegativeInt(saved?.bestScore, DEFAULT_PROFILE.bestScore),
 				gamesPlayed: nonNegativeInt(saved?.gamesPlayed, DEFAULT_PROFILE.gamesPlayed),
+				bestTile: nonNegativeInt(saved?.bestTile, DEFAULT_PROFILE.bestTile),
 			};
 		} catch {
 			return DEFAULT_PROFILE;

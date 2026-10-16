@@ -8,6 +8,8 @@ export interface ResultFlowOptions {
 	readonly score: number;
 	readonly bestScore: number;
 	readonly isNewBest: boolean;
+	/** Extra line between the score and the rank (the best block of the round). */
+	readonly custom?: Phaser.GameObjects.Text;
 	readonly onReplay: () => void;
 	readonly onHome: () => void;
 	/** `collector.recordShare('game_over')` — chỉ gọi khi share thật sự thành công. */
@@ -35,11 +37,14 @@ export function showResult(scene: Phaser.Scene, options: ResultFlowOptions): Gam
 			});
 		},
 	});
-	popup.show({
-		score: options.score,
-		bestScore: options.bestScore,
-		isNewBest: options.isNewBest,
-	});
+	popup.show(
+		{
+			score: options.score,
+			bestScore: options.bestScore,
+			isNewBest: options.isNewBest,
+		},
+		options.custom ? { custom: options.custom } : {},
+	);
 	if (rankLayoutOf(kitConfig()) === 'block') {
 		void fetchResultRank(options.score).then((view) => popup.applyRank(view));
 	}

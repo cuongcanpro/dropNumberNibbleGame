@@ -1,32 +1,82 @@
 /**
- * Rules live in `logic/`: plain TypeScript with no Phaser, DOM, nibi or kit imports, so Vitest runs it
- * under Node. Replace this placeholder round with your game's rules, test first.
+ * One round of Drop Number: the board, the block in hand and the next one, the score. Rules live in
+ * `logic/`: plain TypeScript with no Phaser, DOM, nibi or kit imports, so Vitest runs it under Node.
  */
+import { anyDrop, type Board, type DropResult, drop, emptyBoard, highestTile } from './board';
+
+/** Returns a number in [0, 1), like `Math.random`. */
+export type Rng = () => number;
+
 export interface RoundState {
+	readonly board: Board;
+	readonly current: number;
+	readonly next: number;
 	readonly score: number;
+	/** Highest block made this round; it unlocks bigger new blocks. */
+	readonly maxTile: number;
 	readonly over: boolean;
-	readonly revived: boolean;
 }
 
-export function newRound(): RoundState {
-	return { score: 0, over: false, revived: false };
+/** New blocks run from 2 up to an eighth of the best block, at least 8 and at most 64. */
+export function spawnChoices(maxTile: number): number[] {
+	const top = Math.min(64, Math.max(8, maxTile / 8));
+	const choices: number[] = [];
+	for (let v = 2; v <= top; v *= 2) choices.push(v);
+	return choices;
 }
 
-/** Negative points and points after the round is lost are ignored. */
-export function addPoints(state: RoundState, points: number): RoundState {
-	if (state.over || points <= 0) return state;
-	return { ...state, score: state.score + points };
+/** Smaller blocks come more often: with n choices the i-th (from 0) has weight n - i. */
+export function nextValue(maxTile: number, rng: Rng): number {
+	const choices = spawnChoices(maxTile);
+	const n = choices.length;
+	const total = (n * (n + 1)) / 2;
+	let pick = rng() * total;
+	for (let i = 0; i < n; i++) {
+		pick -= n - i;
+		if (pick < 0) return choices[i] as number;
+	}
+	return choices[n - 1] as number;
 }
 
-export function loseRound(state: RoundState): RoundState {
-	return state.over ? state : { ...state, over: true };
+export function newRound(rng: Rng): RoundState {
+	return {
+		board: emptyBoard(),
+		current: nextValue(0, rng),
+		next: nextValue(0, rng),
+		score: 0,
+		maxTile: 0,
+		over: false,
+	};
 }
 
-/** One second chance per round, granted by the shake-for-reward gate. */
-export function canRevive(state: RoundState): boolean {
-	return state.over && !state.revived;
+export interface Move {
+	readonly state: RoundState;
+	readonly result: DropResult;
 }
 
-export function revive(state: RoundState): RoundState {
-	return canRevive(state) ? { ...state, over: false, revived: true } : state;
+/** Drops the block in hand into `col`. Null when the round is over or the column can't take it. */
+export function play(state: RoundState, col: number, rng: Rng): Move | null {
+	if (state.over) return null;
+	const result = drop(state.board, col, state.current);
+	if (!result) return null;
+	const maxTile = Math.max(state.maxTile, state.current, highestTile(result.board));
+	const current = state.next;
+	return {
+		result,
+		state: {
+			board: result.board,
+			current,
+			next: nextValue(maxTile, rng),
+			score: state.score + result.gained,
+			maxTile,
+			over: !anyDrop(result.board, current),
+		},
+	};
+}
+
+/** Short label for a block: 2 … 8192, then 16K, 32K … */
+export function formatValue(value: number): string {
+	if (value < 10000) return String(value);
+	if (value < 10_000_000) return `${Math.floor(value / 1024)}K`;
+	return `${Math.floor(value / 1_048_576)}M`;
 }
