@@ -472,12 +472,6 @@ export class BoardView {
 		});
 	}
 
-	/** A column the block can't reach wiggles. */
-	refuse(col: number): void {
-		const targets = (this.cells[col] ?? []).flatMap((b) => [b.image, b.text]);
-		this.scene.tweens.add({ targets, x: '+=10', duration: 50, yoyo: true, repeat: 2 });
-	}
-
 	/** Sparks fly out of the merge and a ring of light grows and fades. */
 	private burst(x: number, y: number, color: number, count: number): void {
 		this.sparks.setParticleTint(color);

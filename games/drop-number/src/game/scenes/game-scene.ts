@@ -11,8 +11,8 @@ import {
 	GAME_MODE,
 	GAME_TITLE,
 } from '../config/game-config';
-import type { DropResult } from '../logic/board';
-import { type Faller, fall, fallSpeed, moveTo, spawn } from '../logic/falling';
+import { type DropResult, ROWS } from '../logic/board';
+import { type Faller, fall, fallSpeed, spawn, tap } from '../logic/falling';
 import { formatValue, newRound, play, type RoundState } from '../logic/round';
 import { GameMetricsCollector } from '../metrics/game-metrics-collector';
 import { type Profile, ProfileStore } from '../persistence/profile-store';
@@ -198,18 +198,22 @@ export class GameScene extends Scene {
 		if (step.landed) this.land(step.faller.col);
 	}
 
-	/** A tap moves the falling block to that column and slams it down. */
+	/**
+	 * A tap moves the falling block to that column and slams it down. A full column whose top block differs
+	 * is a wrong choice: the block goes there and the round ends. A taller stack in the way ignores the tap.
+	 */
 	private onColumn(col: number): void {
 		if (!this.started || this.paused || this.ended || !this.faller || !this.view) return;
-		const moved = moveTo(this.faller, this.round.board, col);
-		if (!moved) {
-			this.view.refuse(col);
-			vibrate(VibrationType.LIGHT);
+		const result = tap(this.faller, this.round.board, col, this.round.current);
+		if (result.kind === 'ignored') return;
+		if (result.kind === 'over') {
+			this.view.placeFaller(col, ROWS, false);
+			this.land(col);
 			return;
 		}
-		this.faller = moved;
-		this.view.placeFaller(moved.col, moved.y, true);
-		this.view.flashColumn(moved.col);
+		this.faller = result.faller;
+		this.view.placeFaller(result.faller.col, result.faller.y, true);
+		this.view.flashColumn(result.faller.col);
 	}
 
 	private land(col: number): void {
@@ -222,7 +226,6 @@ export class GameScene extends Scene {
 		this.round = move.state;
 		if (!move.result) {
 			// Landed on a full column it can't merge with: game over.
-			view.refuse(col);
 			vibrate(VibrationType.HEAVY);
 			this.time.delayedCall(600, () => this.endRound());
 			return;

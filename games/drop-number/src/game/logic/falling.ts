@@ -46,6 +46,23 @@ export function moveTo(faller: Faller, board: Board, col: number): Faller | null
 	return { col, y: faller.y, slam: true };
 }
 
+export type Tap =
+	| { readonly kind: 'move'; readonly faller: Faller }
+	/** The column is full and its top block differs: a wrong choice that ends the round. */
+	| { readonly kind: 'over' }
+	/** A taller stack is in the way: the tap does nothing. */
+	| { readonly kind: 'ignored' };
+
+/** What a tap on `col` does to the falling block holding `value`. */
+export function tap(faller: Faller, board: Board, col: number, value: number): Tap {
+	const column = board[col];
+	if (column && column.length >= ROWS && column[column.length - 1] !== value) {
+		return { kind: 'over' };
+	}
+	const moved = moveTo(faller, board, col);
+	return moved ? { kind: 'move', faller: moved } : { kind: 'ignored' };
+}
+
 export interface FallStep {
 	readonly faller: Faller;
 	/** The block reached the top of its column's stack. */

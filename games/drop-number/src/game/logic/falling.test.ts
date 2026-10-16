@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type Board, emptyBoard, ROWS } from './board';
-import { fall, fallSpeed, moveTo, SLAM_SPEED, spawn, spawnColumn } from './falling';
+import { fall, fallSpeed, moveTo, SLAM_SPEED, spawn, spawnColumn, tap } from './falling';
 
 const full = Array.from({ length: ROWS }, (_, i) => 2 ** (i + 2));
 
@@ -48,6 +48,27 @@ describe('falling block', () => {
 		expect(moveTo({ col: 2, y: 3.5, slam: false }, board, 1)).toBeNull();
 		expect(moveTo({ col: 2, y: 4, slam: false }, board, 0)?.col).toBe(0);
 		expect(moveTo({ col: 2, y: 3.5, slam: false }, board, 4)?.col).toBe(4);
+	});
+
+	it('a tap on a full column whose top differs ends the round', () => {
+		const board: Board = [[], full, [], [], []];
+		expect(tap({ col: 2, y: 3, slam: false }, board, 1, 2)).toEqual({ kind: 'over' });
+	});
+
+	it('a tap on a full column with the same top still moves when the block is above it', () => {
+		const board: Board = [[], full, [], [], []];
+		const top = full[ROWS - 1] as number;
+		expect(tap({ col: 2, y: ROWS, slam: false }, board, 1, top)).toEqual({
+			kind: 'move',
+			faller: { col: 1, y: ROWS, slam: true },
+		});
+		expect(tap({ col: 2, y: 3, slam: false }, board, 1, top)).toEqual({ kind: 'ignored' });
+	});
+
+	it('a tap blocked by a taller stack (column not full) is ignored', () => {
+		const board: Board = [[], [2, 4, 8, 16], [], [], []];
+		expect(tap({ col: 2, y: 3.5, slam: false }, board, 0, 2)).toEqual({ kind: 'ignored' });
+		expect(tap({ col: 2, y: 3.5, slam: false }, board, 3, 2).kind).toBe('move');
 	});
 
 	it('tapping its own column just slams it; outside the board is refused', () => {
