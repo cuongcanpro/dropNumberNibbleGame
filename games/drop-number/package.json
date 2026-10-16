@@ -1,0 +1,26 @@
+{
+	"name": "drop-number",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite --host 127.0.0.1",
+		"dev:nibi": "nibi sim .",
+		"dev:qr": "nibi dev .",
+		"deploy": "nibi deploy .",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"nibi": "catalog:",
+		"phaser": "^4.2.1"
+	},
+	"devDependencies": {
+		"@repo/game-kit": "workspace:*",
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}

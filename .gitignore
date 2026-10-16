@@ -1,0 +1,45 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Node.js / pnpm ---
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+.pnpm-store/
+.npm/
+*.tsbuildinfo
+.cache/
+.vite/
+dist/
+web-dist/
+
+# Generated Hermes bytecode / Nibi
+*.hbc
+.nibi-symbols/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+# Telemetry-off default for nibi builds; keys go in .env.nibi.local
+!games/*/.env.nibi
+
+# Logs / misc
+*.log
+logs/
+
+# Game tool output
+games/*/tools/out/
+
+# Artist handoff drops (raw exports + demos) — ghép vào res/ xong thì xoá, không commit
+games/*/artist/
+
+# Claude agent scratch memory (per machine)
+.claude/agent-memory/
+
+# zdeploy app binding (per person)
+.zdeploy.yml
+
+# Old files kept by tools/update-template in a folder without git
+.template-backup/

@@ -1,0 +1,10 @@
+{
+	"extends": "@repo/tsconfig",
+	"include": [
+		"src",
+		"test",
+		"vite.config.ts",
+		"vitest.config.ts",
+		"../../packages/game-kit/src/env.d.ts"
+	]
+}

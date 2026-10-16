@@ -1,0 +1,7 @@
+# zdeploy uploads only what the Dockerfile needs: the prebuilt web build, never sources or keys.
+*
+!Dockerfile
+!nginx.conf
+!web-dist
+!web-dist/**
+web-dist/**/*.map

@@ -1,0 +1,42 @@
+{
+	"name": "nibble-game-template",
+	"private": true,
+	"templateVersion": "0.3.0",
+	"type": "module",
+	"packageManager": "pnpm@11.28.2",
+	"engines": {
+		"node": ">=24.0.0"
+	},
+	"scripts": {
+		"dev": "pnpm --filter \"./games/*\" dev",
+		"dev:nibi": "pnpm --filter \"./games/*\" dev:nibi",
+		"dev:qr": "pnpm --filter \"./games/*\" dev:qr",
+		"qr-page": "node tools/launcher-qr/cli.ts",
+		"nibi:login": "nibi login https://nibi.zingplay.dev",
+		"nibi:whoami": "nibi whoami https://nibi.zingplay.dev",
+		"deploy:nibi": "node tools/sandbox-id/cli.ts && pnpm --filter \"./games/*\" exec nibi deploy . --server https://nibi.zingplay.dev --channel public --source --web",
+		"build": "pnpm --filter \"./games/*\" exec nibi build . && pnpm build:web",
+		"build:web": "pnpm --filter \"./games/*\" exec vite build --outDir ../../web-dist --emptyOutDir",
+		"check": "pnpm typecheck && pnpm test && pnpm lint && pnpm format:check && pnpm test:scripts && pnpm theme-layers --check && pnpm pack-assets --check && pnpm check:assets && pnpm check:kit-parts",
+		"check:assets": "node scripts/check-assets/cli.ts",
+		"check:kit-parts": "node scripts/check-kit-parts/cli.ts",
+		"format": "biome check --write .",
+		"format:check": "biome ci .",
+		"lint": "oxlint .",
+		"pack-assets": "node scripts/pack-assets/cli.ts",
+		"rename-game": "node tools/rename-game/cli.ts",
+		"theme-layers": "node scripts/kit-theme-layers/cli.ts",
+		"test": "pnpm -r --if-present test",
+		"test:scripts": "node --test scripts/pack-assets/*.test.ts scripts/check-assets/*.test.ts scripts/check-kit-parts/*.test.ts scripts/kit-theme-layers/*.test.ts tools/rename-game/*.test.ts tools/sandbox-id/*.test.ts tools/launcher-qr/*.test.ts tools/update-template/*.test.ts",
+		"typecheck": "tsc --noEmit && pnpm -r --if-present run typecheck"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@types/node": "catalog:",
+		"maxrects-packer": "^2.7.3",
+		"nibi": "catalog:",
+		"oxlint": "catalog:",
+		"pngjs": "^7.0.0",
+		"typescript": "catalog:"
+	}
+}

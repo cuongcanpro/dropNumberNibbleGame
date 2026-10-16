@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://nibi.zingplay.dev/nibi.project.v1.json
+# nibi.project.v1
+packageId: "dev.nibi.drop-number"
+assets:
+  root: res
+# Hướng màn hình: mặc định portrait. Game ngang thì thêm `orientation: landscape` (đóng băng lúc compile,
+# xem AGENTS.md) và đổi DESIGN_WIDTH/HEIGHT trong src/game/config/game-config.ts.
+permissions:
+  network:
+    "https://nibble-api.zingplay.dev/": Console dev API
+    "https://nibble-api.zingplay.com/": Console live API
+catalog:
+  displayName: "Drop Number"
+  shortDescription: "A Nibi game."
+  publisherName: "ZPS"
+  tags: [demo]
+  artwork:
+    icon: res/icon.png
+    cover: res/cover.png

@@ -1,0 +1,42 @@
+{
+	"name": "@repo/game-kit",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./tracking": "./src/tracking/index.ts",
+		"./metrics": "./src/metrics/index.ts",
+		"./rank": "./src/rank/index.ts",
+		"./shell": "./src/shell/index.ts",
+		"./alt-ad": "./src/alt-ad/index.ts",
+		"./platform": "./src/platform/index.ts",
+		"./ui": "./src/ui/index.ts",
+		"./vite": "./src/vite/index.ts",
+		"./vite/console-define": "./src/vite/console-define.ts",
+		"./vite/listing-snapshot": "./src/vite/listing-snapshot.ts",
+		"./card-fetch": "./src/ui/card-fetch.ts",
+		"./testing": "./src/testing/index.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"peerDependencies": {
+		"nibi": "catalog:",
+		"phaser": "^4.2.1"
+	},
+	"peerDependenciesMeta": {
+		"phaser": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "catalog:",
+		"nibi": "catalog:",
+		"phaser": "^4.2.1",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}

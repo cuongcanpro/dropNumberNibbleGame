@@ -1,0 +1,30 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["import", "node", "typescript", "unicorn", "vitest"],
+	"env": {
+		"builtin": true,
+		"browser": true,
+		"node": true
+	},
+	"categories": {
+		"correctness": "error",
+		"suspicious": "error"
+	},
+	"options": {
+		"denyWarnings": true,
+		"reportUnusedDisableDirectives": "error"
+	},
+	"rules": {
+		"no-array-sort": "off",
+		"no-array-reverse": "off"
+	},
+	"ignorePatterns": ["**/dist/**", "web-dist/**", "node_modules/**", "**/.nibi-symbols/**"],
+	"overrides": [
+		{
+			"files": ["games/*/src/*/logic/**", "games/*/src/*/config/**", "games/*/src/*/metrics/**"],
+			"rules": {
+				"no-underscore-dangle": "off"
+			}
+		}
+	]
+}

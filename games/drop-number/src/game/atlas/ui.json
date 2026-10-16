@@ -1,0 +1,34 @@
+{
+	"frames": {
+		"ui/start-button": {
+			"frame": {
+				"x": 1,
+				"y": 1,
+				"w": 300,
+				"h": 300
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 300,
+				"h": 300
+			},
+			"sourceSize": {
+				"w": 300,
+				"h": 300
+			}
+		}
+	},
+	"meta": {
+		"app": "pack-assets",
+		"format": "RGBA8888",
+		"scale": "1",
+		"image": "ui.png",
+		"size": {
+			"w": 302,
+			"h": 302
+		}
+	}
+}

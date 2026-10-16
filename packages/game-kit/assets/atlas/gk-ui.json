@@ -1,0 +1,614 @@
+{
+	"frames": {
+		"gk-ui/hud/btnHome": {
+			"frame": {
+				"x": 1,
+				"y": 1,
+				"w": 59,
+				"h": 56
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 59,
+				"h": 56
+			},
+			"sourceSize": {
+				"w": 59,
+				"h": 56
+			}
+		},
+		"gk-ui/hud/btnSetting": {
+			"frame": {
+				"x": 1,
+				"y": 61,
+				"w": 100,
+				"h": 100
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 100,
+				"h": 100
+			},
+			"sourceSize": {
+				"w": 100,
+				"h": 100
+			}
+		},
+		"gk-ui/result/BoardBestScore": {
+			"frame": {
+				"x": 105,
+				"y": 1,
+				"w": 470,
+				"h": 95
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 470,
+				"h": 95
+			},
+			"sourceSize": {
+				"w": 470,
+				"h": 95
+			}
+		},
+		"gk-ui/result/bg_highlight": {
+			"frame": {
+				"x": 1,
+				"y": 165,
+				"w": 738,
+				"h": 738
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 738,
+				"h": 738
+			},
+			"sourceSize": {
+				"w": 738,
+				"h": 738
+			}
+		},
+		"gk-ui/result/titlegameover": {
+			"frame": {
+				"x": 743,
+				"y": 1,
+				"w": 461,
+				"h": 133
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 461,
+				"h": 133
+			},
+			"sourceSize": {
+				"w": 461,
+				"h": 133
+			}
+		},
+		"gk-ui/result/titlewin": {
+			"frame": {
+				"x": 743,
+				"y": 138,
+				"w": 461,
+				"h": 193
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 461,
+				"h": 193
+			},
+			"sourceSize": {
+				"w": 461,
+				"h": 193
+			}
+		},
+		"gk-ui/result/trophy_board": {
+			"frame": {
+				"x": 743,
+				"y": 335,
+				"w": 445,
+				"h": 140
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 445,
+				"h": 140
+			},
+			"sourceSize": {
+				"w": 445,
+				"h": 140
+			}
+		},
+		"gk-ui/setting/board_accent": {
+			"frame": {
+				"x": 1,
+				"y": 907,
+				"w": 549,
+				"h": 747
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 549,
+				"h": 747
+			},
+			"sourceSize": {
+				"w": 549,
+				"h": 747
+			}
+		},
+		"gk-ui/setting/board_base": {
+			"frame": {
+				"x": 554,
+				"y": 907,
+				"w": 549,
+				"h": 747
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 549,
+				"h": 747
+			},
+			"sourceSize": {
+				"w": 549,
+				"h": 747
+			}
+		},
+		"gk-ui/setting/btnBlue": {
+			"frame": {
+				"x": 743,
+				"y": 479,
+				"w": 222,
+				"h": 81
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 222,
+				"h": 81
+			},
+			"sourceSize": {
+				"w": 222,
+				"h": 81
+			}
+		},
+		"gk-ui/setting/btnClose": {
+			"frame": {
+				"x": 1107,
+				"y": 479,
+				"w": 66,
+				"h": 66
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 66,
+				"h": 66
+			},
+			"sourceSize": {
+				"w": 66,
+				"h": 66
+			}
+		},
+		"gk-ui/setting/btnGreen": {
+			"frame": {
+				"x": 969,
+				"y": 549,
+				"w": 225,
+				"h": 81
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 225,
+				"h": 81
+			},
+			"sourceSize": {
+				"w": 225,
+				"h": 81
+			}
+		},
+		"gk-ui/setting/btnRed": {
+			"frame": {
+				"x": 743,
+				"y": 634,
+				"w": 226,
+				"h": 82
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 226,
+				"h": 82
+			},
+			"sourceSize": {
+				"w": 226,
+				"h": 82
+			}
+		},
+		"gk-ui/setting/btnYellow": {
+			"frame": {
+				"x": 973,
+				"y": 634,
+				"w": 226,
+				"h": 82
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 226,
+				"h": 82
+			},
+			"sourceSize": {
+				"w": 226,
+				"h": 82
+			}
+		},
+		"gk-ui/setting/iconFeedback": {
+			"frame": {
+				"x": 105,
+				"y": 100,
+				"w": 47,
+				"h": 47
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 47,
+				"h": 47
+			},
+			"sourceSize": {
+				"w": 47,
+				"h": 47
+			}
+		},
+		"gk-ui/setting/iconLevels": {
+			"frame": {
+				"x": 969,
+				"y": 479,
+				"w": 64,
+				"h": 64
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 64,
+				"h": 64
+			},
+			"sourceSize": {
+				"w": 64,
+				"h": 64
+			}
+		},
+		"gk-ui/setting/iconMap": {
+			"frame": {
+				"x": 156,
+				"y": 100,
+				"w": 59,
+				"h": 56
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 59,
+				"h": 56
+			},
+			"sourceSize": {
+				"w": 59,
+				"h": 56
+			}
+		},
+		"gk-ui/setting/iconPlay": {
+			"frame": {
+				"x": 64,
+				"y": 1,
+				"w": 36,
+				"h": 41
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 36,
+				"h": 41
+			},
+			"sourceSize": {
+				"w": 36,
+				"h": 41
+			}
+		},
+		"gk-ui/setting/iconReturn": {
+			"frame": {
+				"x": 219,
+				"y": 100,
+				"w": 46,
+				"h": 42
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 46,
+				"h": 42
+			},
+			"sourceSize": {
+				"w": 46,
+				"h": 42
+			}
+		},
+		"gk-ui/setting/iconThemes": {
+			"frame": {
+				"x": 579,
+				"y": 1,
+				"w": 132,
+				"h": 108
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 132,
+				"h": 108
+			},
+			"sourceSize": {
+				"w": 132,
+				"h": 108
+			}
+		},
+		"gk-ui/setting/iconmusic": {
+			"frame": {
+				"x": 743,
+				"y": 564,
+				"w": 58,
+				"h": 64
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 58,
+				"h": 64
+			},
+			"sourceSize": {
+				"w": 58,
+				"h": 64
+			}
+		},
+		"gk-ui/setting/iconsound": {
+			"frame": {
+				"x": 269,
+				"y": 100,
+				"w": 68,
+				"h": 56
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 68,
+				"h": 56
+			},
+			"sourceSize": {
+				"w": 68,
+				"h": 56
+			}
+		},
+		"gk-ui/setting/iconvibe": {
+			"frame": {
+				"x": 1107,
+				"y": 720,
+				"w": 79,
+				"h": 71
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 79,
+				"h": 71
+			},
+			"sourceSize": {
+				"w": 79,
+				"h": 71
+			}
+		},
+		"gk-ui/setting/on_off_button": {
+			"frame": {
+				"x": 1037,
+				"y": 479,
+				"w": 63,
+				"h": 64
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 63,
+				"h": 64
+			},
+			"sourceSize": {
+				"w": 63,
+				"h": 64
+			}
+		},
+		"gk-ui/setting/on_off_slot1": {
+			"frame": {
+				"x": 341,
+				"y": 100,
+				"w": 118,
+				"h": 60
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 118,
+				"h": 60
+			},
+			"sourceSize": {
+				"w": 118,
+				"h": 60
+			}
+		},
+		"gk-ui/setting/on_off_slot2": {
+			"frame": {
+				"x": 805,
+				"y": 564,
+				"w": 117,
+				"h": 57
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 117,
+				"h": 57
+			},
+			"sourceSize": {
+				"w": 117,
+				"h": 57
+			}
+		},
+		"gk-ui/setting/tint_iconmusic": {
+			"frame": {
+				"x": 1107,
+				"y": 795,
+				"w": 58,
+				"h": 64
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 58,
+				"h": 64
+			},
+			"sourceSize": {
+				"w": 58,
+				"h": 64
+			}
+		},
+		"gk-ui/setting/tint_iconsound": {
+			"frame": {
+				"x": 463,
+				"y": 100,
+				"w": 68,
+				"h": 56
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 68,
+				"h": 56
+			},
+			"sourceSize": {
+				"w": 68,
+				"h": 56
+			}
+		},
+		"gk-ui/setting/tint_iconvibe": {
+			"frame": {
+				"x": 1107,
+				"y": 863,
+				"w": 79,
+				"h": 71
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 79,
+				"h": 71
+			},
+			"sourceSize": {
+				"w": 79,
+				"h": 71
+			}
+		},
+		"gk-ui/tutorial/icon_hand_tutorial": {
+			"frame": {
+				"x": 743,
+				"y": 720,
+				"w": 104,
+				"h": 89
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 104,
+				"h": 89
+			},
+			"sourceSize": {
+				"w": 104,
+				"h": 89
+			}
+		}
+	},
+	"meta": {
+		"app": "pack-assets",
+		"format": "RGBA8888",
+		"scale": "1",
+		"image": "gk-ui.png",
+		"size": {
+			"w": 1205,
+			"h": 1655
+		}
+	}
+}
