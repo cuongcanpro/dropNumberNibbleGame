@@ -4,26 +4,32 @@ import { DESIGN_WIDTH } from '../config/game-config';
 import { type Board, type Cell, COLS, type MergeStep, ROWS } from '../logic/board';
 import { formatValue } from '../logic/round';
 
-const CELL = 116;
-const GAP = 12;
+const CELL = 112;
+const GAP = 10;
 const STEP = CELL + GAP;
 const BOARD_W = COLS * CELL + (COLS - 1) * GAP;
 const X0 = (DESIGN_WIDTH - BOARD_W) / 2;
-const BOTTOM = 1228;
+/** Frame padding around the lanes and the arrow bar, so both boxes line up. */
+const PAD = 14;
+const BOTTOM = 1232;
 /** Lanes hold the 7 board rows plus the row above them, where blocks appear. */
 const LANE_H = (ROWS + 1) * STEP - GAP;
 const LANE_TOP = BOTTOM - LANE_H;
-/** The bar of ▼ arrows above the lanes, one slot per column. */
-const HEADER_H = 54;
-const HEADER_Y = LANE_TOP - 14 - HEADER_H / 2;
+/** The bar of ▼ arrows right above the board, one slot per column, nearly a cell tall. */
+const HEADER_H = 72;
+const HEADER_Y = LANE_TOP - PAD - 6 - HEADER_H / 2;
 /** Top of the tap area: the arrow bar. */
 const TAP_TOP = HEADER_Y - HEADER_H / 2;
-const NEXT_X = DESIGN_WIDTH - 66;
-const NEXT_Y = 122;
+/** Second HUD row: two matching pills, best score on the left, next block on the right. */
+export const PILL_Y = 126;
+export const PILL_W = 236;
+const PILL_H = 60;
+export const PILL_LEFT_X = DESIGN_WIDTH / 2 - 150;
+const PILL_RIGHT_X = DESIGN_WIDTH / 2 + 150;
 const TRAIL_H = 256;
 /** Each lane has its own faint hue so columns read apart. */
-const LANE_TINTS = [0x2a2d4f, 0x23344c, 0x213b45, 0x2d3348, 0x352c4a];
-const ARROW_IDLE = 0.35;
+const LANE_TINTS = [0x262a40, 0x222d3f, 0x20313a, 0x292c3d, 0x2b273d];
+const ARROW_IDLE = 0x6f7a8c;
 
 const PALETTE = [
 	0xf06292, 0x4fc3f7, 0x81c784, 0xffb74d, 0xba68c8, 0xe57373, 0x4db6ac, 0xffd54f, 0x7986cb,
@@ -100,13 +106,19 @@ function gradientTexture(
 	return key;
 }
 
+/** A dark rounded pill in the second HUD row; `x` is its centre. */
+export function addPill(scene: Phaser.Scene, x: number): Phaser.GameObjects.Image {
+	const key = plainTexture(scene, 'hud-pill', PILL_W, PILL_H, 0x141b27, PILL_H / 2);
+	return scene.add.image(x, PILL_Y, key);
+}
+
 function arrowTexture(scene: Phaser.Scene): string {
 	const key = 'arrow-down';
 	if (scene.textures.exists(key)) return key;
 	const g = scene.add.graphics();
 	g.fillStyle(0xffffff, 1);
-	g.fillTriangle(0, 0, 36, 0, 18, 20);
-	g.generateTexture(key, 36, 20);
+	g.fillTriangle(0, 0, 44, 0, 22, 24);
+	g.generateTexture(key, 44, 24);
 	g.destroy();
 	return key;
 }
@@ -196,20 +208,32 @@ export class BoardView {
 	constructor(scene: Phaser.Scene, onColumn: (col: number) => void) {
 		this.scene = scene;
 		const laneY = LANE_TOP + LANE_H / 2;
-		const frameKey = plainTexture(scene, 'board-frame', BOARD_W + 28, LANE_H + 16, 0x141b27, 28);
+		const frameKey = plainTexture(
+			scene,
+			'board-frame',
+			BOARD_W + PAD * 2,
+			LANE_H + PAD * 2,
+			0x141b27,
+			24,
+		);
 		scene.add.image(DESIGN_WIDTH / 2, laneY, frameKey);
 
-		// Arrow bar: one slot per column with a ▼, the column of the falling block lit up.
-		const headerKey = plainTexture(scene, 'header-box', BOARD_W + 28, HEADER_H + 12, 0x141b27, 20);
+		// Arrow bar: a dark box the board's width, one slot per column with a grey ▼; the falling block's
+		// column lights its arrow in the block's colour.
+		const headerKey = plainTexture(
+			scene,
+			'header-box',
+			BOARD_W + PAD * 2,
+			HEADER_H + PAD,
+			0x141b27,
+			20,
+		);
 		scene.add.image(DESIGN_WIDTH / 2, HEADER_Y, headerKey);
-		const slotKey = plainTexture(scene, 'header-slot', CELL, HEADER_H - 8, 0xffffff, 14);
+		const slotKey = plainTexture(scene, 'header-slot', CELL, HEADER_H - 6, 0x1f2636, 12);
 		for (let col = 0; col < COLS; col++) {
-			scene.add.image(cellX(col), HEADER_Y, slotKey).setTint(LANE_TINTS[col] ?? 0x223047);
+			scene.add.image(cellX(col), HEADER_Y, slotKey);
 			this.arrows.push(
-				scene.add
-					.image(cellX(col), HEADER_Y + 1, arrowTexture(scene))
-					.setTint(0x9fb0c8)
-					.setAlpha(ARROW_IDLE),
+				scene.add.image(cellX(col), HEADER_Y, arrowTexture(scene)).setTint(ARROW_IDLE),
 			);
 		}
 
@@ -233,16 +257,16 @@ export class BoardView {
 				.on('pointerdown', () => onColumn(col));
 		}
 
-		// Danger line: above it is the row where blocks appear, so a block resting there means a full column.
-		const dangerY = cellY(ROWS - 1) - CELL / 2 - GAP / 2;
+		// Danger line along the top of the board, right under the arrow bar, with a red haze fading down.
+		const dangerY = LANE_TOP - PAD / 2;
 		scene.add
 			.image(
 				DESIGN_WIDTH / 2,
-				dangerY + 18,
-				gradientTexture(scene, 'danger-fade', BOARD_W, 36, 0.22, 0),
+				dangerY + 28,
+				gradientTexture(scene, 'danger-fade', BOARD_W + PAD * 2, 56, 0.2, 0),
 			)
 			.setTint(0xe5484d);
-		scene.add.rectangle(DESIGN_WIDTH / 2, dangerY, BOARD_W, 3, 0xe5484d, 0.55);
+		scene.add.rectangle(DESIGN_WIDTH / 2, dangerY, BOARD_W + PAD * 2, 3, 0xe5484d, 0.6);
 
 		// Light in the dropped block's colour, under the blocks: the column glows and a trail follows the block.
 		this.glow = scene.add.image(0, laneY, laneKey).setBlendMode('ADD').setVisible(false);
@@ -264,10 +288,18 @@ export class BoardView {
 		this.faller = makeBlock(scene, cellX(2), cellY(ROWS));
 		showBlock(scene, this.faller, undefined);
 
-		makeText(scene, { x: NEXT_X - 64, y: NEXT_Y, text: 'Tiếp', size: 26, color: '#9fb0c8' });
-		this.next = makeBlock(scene, NEXT_X, NEXT_Y + 4);
-		this.next.image.setScale(0.5);
-		this.next.text.setScale(0.5);
+		addPill(scene, PILL_RIGHT_X);
+		makeText(scene, {
+			x: PILL_RIGHT_X - 30,
+			y: PILL_Y,
+			text: 'Tiếp',
+			size: 30,
+			color: '#9fb0c8',
+		});
+		this.next = makeBlock(scene, PILL_RIGHT_X + 52, PILL_Y);
+		this.next.image.setScale(0.42);
+		this.next.text.setScale(0.42);
+		this.next.text.setY(PILL_Y - 2);
 
 		const spark = squareSparkTexture(scene);
 		this.trail = scene.add.particles(0, 0, spark, {
@@ -384,9 +416,9 @@ export class BoardView {
 
 	private setArrow(col: number): void {
 		if (col === this.arrowCol) return;
-		this.arrows[this.arrowCol]?.setAlpha(ARROW_IDLE).setTint(0x9fb0c8);
+		this.arrows[this.arrowCol]?.setTint(ARROW_IDLE);
 		this.arrowCol = col;
-		this.arrows[col]?.setAlpha(1).setTint(shade(colorOf(this.fallerValue), 1.15));
+		this.arrows[col]?.setTint(shade(colorOf(this.fallerValue), 1.15));
 	}
 
 	/** The absorbed blocks slide into the merged one trailing particles, then burst and pop. */

@@ -1,7 +1,7 @@
 import { AttemptCounter, createLocalAttemptStore, createMetricSink } from '@repo/game-kit/metrics';
 import { applyHostCamera, Sound, safeShiftDown, VibrationType } from '@repo/game-kit/platform';
 import { setGameMode } from '@repo/game-kit/shell';
-import { FONT_LILITA_STACK, HUD_BUTTON_MARGIN, makeText } from '@repo/game-kit/ui';
+import { FONT_LILITA_STACK, HUD_BUTTON_MARGIN, HUD_BUTTON_SIZE, makeText } from '@repo/game-kit/ui';
 import type Phaser from 'phaser';
 import { Scene } from 'phaser';
 import {
@@ -16,7 +16,7 @@ import { type Faller, fall, fallSpeed, moveTo, spawn } from '../logic/falling';
 import { formatValue, newRound, play, type RoundState } from '../logic/round';
 import { GameMetricsCollector } from '../metrics/game-metrics-collector';
 import { type Profile, ProfileStore } from '../persistence/profile-store';
-import { BoardView } from '../view/board-view';
+import { addPill, BoardView, PILL_LEFT_X, PILL_Y } from '../view/board-view';
 import { addBackground, vibrate } from '../view/core';
 import { addHudButtons } from '../view/hud-buttons';
 import { showResult } from '../view/result-flow';
@@ -147,22 +147,32 @@ export class GameScene extends Scene {
 		this.started = true;
 		this.metrics.start(this.attempts.attemptFor(0), this.profile.bestScore);
 
+		// First row: Home, score, Settings on one line. Second row: best (left pill) and next (right pill).
 		const top = HUD_BUTTON_MARGIN + safeShiftDown(this, HUD_BUTTON_MARGIN);
 		this.scoreText = makeText(this, {
 			x: CENTER_X,
-			y: top + 40,
+			y: top + HUD_BUTTON_SIZE / 2,
 			text: '0',
-			size: 64,
+			size: 68,
 			font: FONT_LILITA_STACK,
 		}).setName('score');
-		this.bestText = makeText(this, {
-			x: CENTER_X,
-			y: top + 96,
-			text: `Kỷ lục: ${this.profile.bestScore}`,
-			size: 26,
+		this.view = new BoardView(this, (col) => this.onColumn(col));
+		addPill(this, PILL_LEFT_X);
+		makeText(this, {
+			x: PILL_LEFT_X - 46,
+			y: PILL_Y,
+			text: 'Kỷ lục',
+			size: 28,
 			color: '#9fb0c8',
 		});
-		this.view = new BoardView(this, (col) => this.onColumn(col));
+		this.bestText = makeText(this, {
+			x: PILL_LEFT_X + 56,
+			y: PILL_Y - 2,
+			text: String(this.profile.bestScore),
+			size: 32,
+			font: FONT_LILITA_STACK,
+			color: '#ffd54f',
+		});
 		this.view.render(this.round.board);
 		this.spawnFaller();
 	}
@@ -245,7 +255,7 @@ export class GameScene extends Scene {
 		this.shownScore = this.round.score;
 		this.scoreText.setText(String(this.shownScore));
 		if (this.round.score > this.profile.bestScore) {
-			this.bestText.setText(`Kỷ lục: ${this.round.score}`);
+			this.bestText.setText(String(this.round.score));
 		}
 	}
 
