@@ -218,6 +218,7 @@ export class GameScene extends Scene {
 			return;
 		}
 		view.hideFaller();
+		view.landed(move.result.landed.col, move.result.landed.row, before.current);
 		vibrate(VibrationType.LIGHT);
 		void this.animateMove(view, before, move.result).then(() => {
 			if (this.view !== view || this.ended) return;

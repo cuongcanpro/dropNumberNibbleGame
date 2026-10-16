@@ -9,14 +9,21 @@ const GAP = 12;
 const STEP = CELL + GAP;
 const BOARD_W = COLS * CELL + (COLS - 1) * GAP;
 const X0 = (DESIGN_WIDTH - BOARD_W) / 2;
-const BOTTOM = 1220;
-const LANE_H = ROWS * STEP - GAP;
+const BOTTOM = 1228;
+/** Lanes hold the 7 board rows plus the row above them, where blocks appear. */
+const LANE_H = (ROWS + 1) * STEP - GAP;
 const LANE_TOP = BOTTOM - LANE_H;
-/** Top of the tap area: the row above the board, where blocks appear. */
-const TAP_TOP = 170;
-const NEXT_X = DESIGN_WIDTH - 70;
-const NEXT_Y = 168;
-const SWEEP_H = 240;
+/** The bar of ▼ arrows above the lanes, one slot per column. */
+const HEADER_H = 54;
+const HEADER_Y = LANE_TOP - 14 - HEADER_H / 2;
+/** Top of the tap area: the arrow bar. */
+const TAP_TOP = HEADER_Y - HEADER_H / 2;
+const NEXT_X = DESIGN_WIDTH - 66;
+const NEXT_Y = 122;
+const TRAIL_H = 256;
+/** Each lane has its own faint hue so columns read apart. */
+const LANE_TINTS = [0x2a2d4f, 0x23344c, 0x213b45, 0x2d3348, 0x352c4a];
+const ARROW_IDLE = 0.35;
 
 const PALETTE = [
 	0xf06292, 0x4fc3f7, 0x81c784, 0xffb74d, 0xba68c8, 0xe57373, 0x4db6ac, 0xffd54f, 0x7986cb,
@@ -70,19 +77,36 @@ function plainTexture(
 	return key;
 }
 
-/** A soft vertical band of light: bright in the middle, fading to nothing at both ends. */
-function sweepTexture(scene: Phaser.Scene): string {
-	const key = 'lane-sweep';
+/** White vertical gradient, `from` alpha at the top to `to` at the bottom; tinted where it is used. */
+function gradientTexture(
+	scene: Phaser.Scene,
+	key: string,
+	w: number,
+	h: number,
+	from: number,
+	to: number,
+): string {
 	if (scene.textures.exists(key)) return key;
 	const g = scene.add.graphics();
-	const slices = 30;
-	const h = SWEEP_H / slices;
+	const slices = 32;
+	const sh = h / slices;
 	for (let i = 0; i < slices; i++) {
 		const t = (i + 0.5) / slices;
-		g.fillStyle(0xffffff, Math.sin(Math.PI * t) ** 2 * 0.55);
-		g.fillRect(0, i * h, CELL - 12, Math.ceil(h));
+		g.fillStyle(0xffffff, from + (to - from) * t * t);
+		g.fillRect(0, i * sh, w, Math.ceil(sh));
 	}
-	g.generateTexture(key, CELL - 12, SWEEP_H);
+	g.generateTexture(key, w, h);
+	g.destroy();
+	return key;
+}
+
+function arrowTexture(scene: Phaser.Scene): string {
+	const key = 'arrow-down';
+	if (scene.textures.exists(key)) return key;
+	const g = scene.add.graphics();
+	g.fillStyle(0xffffff, 1);
+	g.fillTriangle(0, 0, 36, 0, 18, 20);
+	g.generateTexture(key, 36, 20);
 	g.destroy();
 	return key;
 }
@@ -162,25 +186,36 @@ export class BoardView {
 	private fallerValue = 2;
 	private readonly next: BlockSprite;
 	private readonly glow: Phaser.GameObjects.Image;
-	private readonly sweep: Phaser.GameObjects.Image;
+	private readonly light: Phaser.GameObjects.Image;
+	private readonly arrows: Phaser.GameObjects.Image[] = [];
+	private arrowCol = -1;
 	private readonly sparks: Phaser.GameObjects.Particles.ParticleEmitter;
 	private readonly trail: Phaser.GameObjects.Particles.ParticleEmitter;
+	private readonly dust: Phaser.GameObjects.Particles.ParticleEmitter;
 
 	constructor(scene: Phaser.Scene, onColumn: (col: number) => void) {
 		this.scene = scene;
 		const laneY = LANE_TOP + LANE_H / 2;
-		const frameKey = plainTexture(
-			scene,
-			'board-frame',
-			BOARD_W + 28,
-			ROWS * STEP + 16,
-			0x141b27,
-			28,
-		);
+		const frameKey = plainTexture(scene, 'board-frame', BOARD_W + 28, LANE_H + 16, 0x141b27, 28);
 		scene.add.image(DESIGN_WIDTH / 2, laneY, frameKey);
-		const laneKey = plainTexture(scene, 'board-lane', CELL, LANE_H, 0x223047, 20);
+
+		// Arrow bar: one slot per column with a ▼, the column of the falling block lit up.
+		const headerKey = plainTexture(scene, 'header-box', BOARD_W + 28, HEADER_H + 12, 0x141b27, 20);
+		scene.add.image(DESIGN_WIDTH / 2, HEADER_Y, headerKey);
+		const slotKey = plainTexture(scene, 'header-slot', CELL, HEADER_H - 8, 0xffffff, 14);
 		for (let col = 0; col < COLS; col++) {
-			const lane = scene.add.image(cellX(col), laneY, laneKey);
+			scene.add.image(cellX(col), HEADER_Y, slotKey).setTint(LANE_TINTS[col] ?? 0x223047);
+			this.arrows.push(
+				scene.add
+					.image(cellX(col), HEADER_Y + 1, arrowTexture(scene))
+					.setTint(0x9fb0c8)
+					.setAlpha(ARROW_IDLE),
+			);
+		}
+
+		const laneKey = plainTexture(scene, 'board-lane', CELL, LANE_H, 0xffffff, 20);
+		for (let col = 0; col < COLS; col++) {
+			const lane = scene.add.image(cellX(col), laneY, laneKey).setTint(LANE_TINTS[col] ?? 0x223047);
 			// The whole column, from the row above the board down to the bottom, is the tap target.
 			const hit = {
 				x: -GAP / 2,
@@ -198,10 +233,22 @@ export class BoardView {
 				.on('pointerdown', () => onColumn(col));
 		}
 
-		// Light shown once down a column when the player drops a block into it (`flashColumn`), under the blocks.
+		// Danger line: above it is the row where blocks appear, so a block resting there means a full column.
+		const dangerY = cellY(ROWS - 1) - CELL / 2 - GAP / 2;
+		scene.add
+			.image(
+				DESIGN_WIDTH / 2,
+				dangerY + 18,
+				gradientTexture(scene, 'danger-fade', BOARD_W, 36, 0.22, 0),
+			)
+			.setTint(0xe5484d);
+		scene.add.rectangle(DESIGN_WIDTH / 2, dangerY, BOARD_W, 3, 0xe5484d, 0.55);
+
+		// Light in the dropped block's colour, under the blocks: the column glows and a trail follows the block.
 		this.glow = scene.add.image(0, laneY, laneKey).setBlendMode('ADD').setVisible(false);
-		this.sweep = scene.add
-			.image(0, LANE_TOP + SWEEP_H / 2, sweepTexture(scene))
+		this.light = scene.add
+			.image(0, 0, gradientTexture(scene, 'light-trail', CELL - 8, TRAIL_H, 0, 0.75))
+			.setOrigin(0.5, 1)
 			.setBlendMode('ADD')
 			.setVisible(false);
 
@@ -217,10 +264,10 @@ export class BoardView {
 		this.faller = makeBlock(scene, cellX(2), cellY(ROWS));
 		showBlock(scene, this.faller, undefined);
 
-		makeText(scene, { x: NEXT_X - 74, y: NEXT_Y, text: 'Tiếp', size: 26, color: '#9fb0c8' });
+		makeText(scene, { x: NEXT_X - 64, y: NEXT_Y, text: 'Tiếp', size: 26, color: '#9fb0c8' });
 		this.next = makeBlock(scene, NEXT_X, NEXT_Y + 4);
-		this.next.image.setScale(0.55);
-		this.next.text.setScale(0.55);
+		this.next.image.setScale(0.5);
+		this.next.text.setScale(0.5);
 
 		const spark = squareSparkTexture(scene);
 		this.trail = scene.add.particles(0, 0, spark, {
@@ -239,6 +286,17 @@ export class BoardView {
 			rotate: { start: 0, end: 360 },
 			lifespan: { min: 320, max: 620 },
 			scale: { start: 1.5, end: 0 },
+			alpha: { start: 1, end: 0 },
+			blendMode: 'ADD',
+			emitting: false,
+		});
+		// Landing dust: small squares shooting straight up, speeding up as they fade.
+		this.dust = scene.add.particles(0, 0, spark, {
+			speedX: { min: -12, max: 12 },
+			speedY: { min: -140, max: -40 },
+			accelerationY: -1600,
+			lifespan: { min: 160, max: 300 },
+			scale: { start: 0.75, end: 0.2 },
 			alpha: { start: 1, end: 0 },
 			blendMode: 'ADD',
 			emitting: false,
@@ -277,7 +335,11 @@ export class BoardView {
 		const x = cellX(col);
 		const py = cellY(y);
 		setBlockPos(this.faller, x, py);
+		this.setArrow(col);
 		if (slam) {
+			// The light trail stretches from the top of the lane down to the block.
+			const top = py - CELL / 2 + 6;
+			this.light.setPosition(x, top).setDisplaySize(CELL - 8, Math.max(1, top - LANE_TOP));
 			this.trail.setParticleTint(colorOf(this.fallerValue));
 			this.trail.emitParticleAt(x + (Math.random() - 0.5) * CELL * 0.8, py - CELL / 2, 2);
 		}
@@ -285,31 +347,46 @@ export class BoardView {
 
 	hideFaller(): void {
 		showBlock(this.scene, this.faller, undefined);
+		this.setArrow(-1);
 	}
 
-	/** The player dropped the block into `col`: a soft light in the block's colour runs down it once. */
+	/** The player dropped the block into `col`: the column lights up in the block's colour. */
 	flashColumn(col: number): void {
-		const color = shade(colorOf(this.fallerValue), 1.2);
+		const color = colorOf(this.fallerValue);
 		const x = cellX(col);
-		this.scene.tweens.killTweensOf([this.glow, this.sweep]);
+		this.scene.tweens.killTweensOf([this.glow, this.light]);
 		this.glow
 			.setPosition(x, LANE_TOP + LANE_H / 2)
 			.setTint(color)
-			.setAlpha(0.12)
+			.setAlpha(0.16)
 			.setVisible(true);
-		this.scene.tweens.add({ targets: this.glow, alpha: 0, duration: 450, ease: 'Quad.Out' });
-		this.sweep
-			.setPosition(x, LANE_TOP + SWEEP_H / 2)
-			.setTint(color)
-			.setAlpha(0.45)
-			.setVisible(true);
+		this.light.setTint(shade(color, 1.15)).setAlpha(0.8).setVisible(true);
+	}
+
+	/**
+	 * The block came to rest on another block or the floor at `row`: small squares shoot up from its base
+	 * and the column light fades.
+	 */
+	landed(col: number, row: number, value: number): void {
+		const x = cellX(col);
+		const y = cellY(row) + CELL / 2 - 6;
+		this.dust.setParticleTint(shade(colorOf(value), 1.2));
+		for (let i = 0; i < 12; i++) {
+			this.dust.emitParticleAt(x - CELL / 2 + 6 + ((CELL - 12) * (i + Math.random())) / 12, y, 1);
+		}
 		this.scene.tweens.add({
-			targets: this.sweep,
-			y: BOTTOM - SWEEP_H / 2,
+			targets: [this.glow, this.light],
 			alpha: 0,
-			duration: 380,
-			ease: 'Quad.In',
+			duration: 260,
+			ease: 'Quad.Out',
 		});
+	}
+
+	private setArrow(col: number): void {
+		if (col === this.arrowCol) return;
+		this.arrows[this.arrowCol]?.setAlpha(ARROW_IDLE).setTint(0x9fb0c8);
+		this.arrowCol = col;
+		this.arrows[col]?.setAlpha(1).setTint(shade(colorOf(this.fallerValue), 1.15));
 	}
 
 	/** The absorbed blocks slide into the merged one trailing particles, then burst and pop. */
