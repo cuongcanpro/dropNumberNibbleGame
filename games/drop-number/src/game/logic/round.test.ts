@@ -40,26 +40,20 @@ describe('round', () => {
 		expect(move?.state.board[1]).toEqual([8]);
 	});
 
-	it('ignores a column that cannot take the block', () => {
-		const full = Array.from({ length: ROWS }, (_, i) => 2 ** (i + 2));
-		const start = state({ board: [full, [], [], [], []], current: 2 });
-		expect(play(start, 0, always(0))).toBeNull();
+	it('landing on a full column that does not match ends the round, score kept', () => {
+		const start = state({ board: [col(0), [], [], [], []], current: 2, score: 40 });
+		const move = play(start, 0, always(0));
+		expect(move?.result).toBeNull();
+		expect(move?.state).toMatchObject({ over: true, score: 40 });
+		expect(play(move?.state as RoundState, 1, always(0))).toBeNull();
 	});
 
-	it('is over when no column can take the next block', () => {
-		// Every column full; column 4 has one free slot that the drop fills.
-		const board: Board = [col(0), col(1), col(0), col(1), col(0).slice(0, ROWS - 1)];
-		const start = state({ board, current: 2, next: 4 });
-		const move = play(start, 4, always(0));
-		expect(move?.state.over).toBe(true);
-		expect(play(move?.state as RoundState, 0, always(0))).toBeNull();
-	});
-
-	it('keeps going when a full column tops out with the next block', () => {
-		const board: Board = [col(0), col(1), col(0), col(1), col(0).slice(0, ROWS - 1)];
-		// Column 1 tops out at 512: a 512 in hand can still go there.
-		const start = state({ board, current: 2, next: 512 });
-		expect(play(start, 4, always(0))?.state.over).toBe(false);
+	it('keeps going when the block lands on a full column with the same top', () => {
+		const board: Board = [col(0), col(1), col(0), col(1), col(0)];
+		// Column 1 tops out at 512: a 512 merges into it.
+		const move = play(state({ board, current: 512 }), 1, always(0));
+		expect(move?.state.over).toBe(false);
+		expect(move?.state.board[1]?.[ROWS - 1]).toBe(1024);
 	});
 
 	it('labels big blocks short', () => {

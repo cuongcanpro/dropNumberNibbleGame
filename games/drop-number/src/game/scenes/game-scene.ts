@@ -11,6 +11,8 @@ import {
 	GAME_MODE,
 	GAME_TITLE,
 } from '../config/game-config';
+import type { DropResult } from '../logic/board';
+import { type Faller, fall, fallSpeed, moveTo, spawn } from '../logic/falling';
 import { formatValue, newRound, play, type RoundState } from '../logic/round';
 import { GameMetricsCollector } from '../metrics/game-metrics-collector';
 import { type Profile, ProfileStore } from '../persistence/profile-store';
@@ -28,15 +30,16 @@ const CENTER_Y = DESIGN_HEIGHT / 2;
 const random = (): number => Math.random();
 
 /**
- * Drop Number: tap a column to drop the block in hand; equal neighbours merge. Turn-based, so nothing
- * steps in `update()`: input is ignored while a drop animates (`busy`) or a kit dialog is open (`paused`).
+ * Drop Number: a block sinks from above the board; a tap moves it to a column and slams it down, and equal
+ * neighbours merge. `update()` steps the fall, which waits while merges animate (`faller` is null) or a kit
+ * dialog is open (`paused`).
  */
 export class GameScene extends Scene {
 	private round!: RoundState;
 	private started = false;
 	private paused = false;
 	private ended = false;
-	private busy = false;
+	private faller: Faller | null = null;
 	private shownScore = 0;
 	private profile!: Profile;
 	private readonly store = new ProfileStore();
@@ -61,7 +64,7 @@ export class GameScene extends Scene {
 		this.started = false;
 		this.paused = false;
 		this.ended = false;
-		this.busy = false;
+		this.faller = null;
 		this.shownScore = 0;
 		this.view = null;
 		this.profile = this.store.load();
@@ -91,7 +94,7 @@ export class GameScene extends Scene {
 			started: this.started,
 			paused: this.paused,
 			ended: this.ended,
-			busy: this.busy,
+			faller: this.faller,
 			...this.round,
 		}));
 		this.showTitle();
@@ -161,36 +164,73 @@ export class GameScene extends Scene {
 		});
 		this.view = new BoardView(this, (col) => this.onColumn(col));
 		this.view.render(this.round.board);
-		this.view.setHand(this.round.current, this.round.next);
+		this.spawnFaller();
 	}
 
+	private spawnFaller(): void {
+		this.faller = spawn(this.round.board);
+		this.view?.spawnFaller(this.round.current, this.faller.col);
+		this.view?.setNext(this.round.next);
+	}
+
+	/** The falling block sinks every frame; Settings, Exit and Feedback set `paused`. */
+	override update(_time: number, deltaMs: number): void {
+		if (!this.started || this.paused || this.ended || !this.faller || !this.view) return;
+		// A long frame (tab switch, GC pause) must not skip the block past its landing spot.
+		const step = fall(
+			this.faller,
+			this.round.board,
+			Math.min(deltaMs, 50),
+			fallSpeed(this.round.score),
+		);
+		this.faller = step.faller;
+		this.view.placeFaller(step.faller.col, step.faller.y, step.faller.slam);
+		this.view.tick(Math.min(deltaMs, 50));
+		if (step.landed) this.land(step.faller.col);
+	}
+
+	/** A tap moves the falling block to that column and slams it down. */
 	private onColumn(col: number): void {
-		if (!this.started || this.paused || this.ended || this.busy || !this.view) return;
-		const view = this.view;
-		const before = this.round;
-		const move = play(before, col, random);
-		if (!move) {
-			view.refuse(col);
+		if (!this.started || this.paused || this.ended || !this.faller || !this.view) return;
+		const moved = moveTo(this.faller, this.round.board, col);
+		if (!moved) {
+			this.view.refuse(col);
 			vibrate(VibrationType.LIGHT);
 			return;
 		}
-		this.busy = true;
+		this.faller = moved;
+		this.view.placeFaller(moved.col, moved.y, true);
+	}
+
+	private land(col: number): void {
+		const view = this.view;
+		if (!view) return;
+		const before = this.round;
+		const move = play(before, col, random);
+		this.faller = null;
+		if (!move) return;
 		this.round = move.state;
+		if (!move.result) {
+			// Landed on a full column it can't merge with: game over.
+			view.refuse(col);
+			vibrate(VibrationType.HEAVY);
+			this.time.delayedCall(600, () => this.endRound());
+			return;
+		}
+		view.hideFaller();
+		vibrate(VibrationType.LIGHT);
 		void this.animateMove(view, before, move.result).then(() => {
-			if (this.view !== view) return;
-			this.busy = false;
-			if (this.round.over) this.time.delayedCall(500, () => this.endRound());
+			if (this.view !== view || this.ended) return;
+			this.spawnFaller();
 		});
 	}
 
 	private async animateMove(
 		view: BoardView,
 		before: RoundState,
-		result: NonNullable<ReturnType<typeof play>>['result'],
+		result: DropResult,
 	): Promise<void> {
-		view.hideHand();
 		const { landed } = result;
-		await view.animateDrop(landed.col, landed.row, before.current);
 		view.render(
 			before.board.map((column, c) => (c === landed.col ? [...column, before.current] : column)),
 		);
@@ -206,7 +246,6 @@ export class GameScene extends Scene {
 		if (this.round.score > this.profile.bestScore) {
 			this.bestText.setText(`Kỷ lục: ${this.round.score}`);
 		}
-		if (!this.round.over) view.setHand(this.round.current, this.round.next);
 	}
 
 	/** Call when the round ends: saves the best score, closes metrics and shows the result popup with rank. */

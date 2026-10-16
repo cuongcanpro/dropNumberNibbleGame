@@ -2,7 +2,7 @@
  * One round of Drop Number: the board, the block in hand and the next one, the score. Rules live in
  * `logic/`: plain TypeScript with no Phaser, DOM, nibi or kit imports, so Vitest runs it under Node.
  */
-import { anyDrop, type Board, type DropResult, drop, emptyBoard, highestTile } from './board';
+import { type Board, type DropResult, drop, emptyBoard, highestTile } from './board';
 
 /** Returns a number in [0, 1), like `Math.random`. */
 export type Rng = () => number;
@@ -51,14 +51,15 @@ export function newRound(rng: Rng): RoundState {
 
 export interface Move {
 	readonly state: RoundState;
-	readonly result: DropResult;
+	/** Null when the block landed on a full column it can't merge with: the round is over. */
+	readonly result: DropResult | null;
 }
 
-/** Drops the block in hand into `col`. Null when the round is over or the column can't take it. */
+/** The falling block lands in `col`. Null once the round is over. */
 export function play(state: RoundState, col: number, rng: Rng): Move | null {
 	if (state.over) return null;
 	const result = drop(state.board, col, state.current);
-	if (!result) return null;
+	if (!result) return { result: null, state: { ...state, over: true } };
 	const maxTile = Math.max(state.maxTile, state.current, highestTile(result.board));
 	const current = state.next;
 	return {
@@ -69,7 +70,7 @@ export function play(state: RoundState, col: number, rng: Rng): Move | null {
 			next: nextValue(maxTile, rng),
 			score: state.score + result.gained,
 			maxTile,
-			over: !anyDrop(result.board, current),
+			over: false,
 		},
 	};
 }
